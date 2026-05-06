@@ -1,4 +1,8 @@
 # F5XC Security Feature Enablement Guidelines
+## ⚠️ Important Note
+
+Please refer to the official F5XC technical documentation for the latest and updated details.  
+This README is intended for learning and understanding purposes only.
 
 ## CSRF Protection
 
@@ -214,3 +218,207 @@ Configure a **Fall-Through Rule List** for traffic that does not match any expli
   * or `Block`
 
 based on observed traffic behavior and validation confidence.
+
+# Cookies, Cookie Protection and CSRF - Notes
+
+# Cookies
+
+Cookies are sent by backend applications to the user's browser, for example session cookies used for login/authentication.
+
+Each domain maintains its own cookie storage ("cookie jar" for understanding purposes).
+
+Example:
+
+* `bank.com` has its own cookie jar
+* `evil.com` has its own cookie jar
+
+When the user makes a request to `bank.com`, the browser automatically sends cookies associated with `bank.com`.
+
+When the user makes a request to `evil.com`, the browser automatically sends cookies associated with `evil.com`.
+
+Cookie behavior depends on the cookie protection settings configured on the cookies.
+
+---
+
+# Cookie Protection - SameSite Attribute
+
+Cookie protection settings commonly use the `SameSite` attribute.
+
+The three possible values are:
+
+* `Strict`
+* `Lax`
+* `None`
+
+---
+
+# Request Categories
+
+Cookie behavior can be understood by dividing requests into two categories:
+
+## 1. Background Triggered Requests (Silent Requests)
+
+The user does not intentionally navigate to the site.
+
+Examples:
+
+* `<img>`
+* `<iframe>`
+* `<script>`
+* Auto-submitted `<form>`
+* `fetch()` / AJAX
+
+---
+
+## 2. User-Initiated Navigation
+
+The user intentionally navigates to the site.
+
+Examples:
+
+* Clicking a link
+* Typing a URL
+* Bookmark click
+* Redirects after login
+
+---
+
+# SameSite Behavior Matrix
+
+## User-Initiated Navigation
+
+| SameSite | Cookie Behavior                                       |
+| -------- | ----------------------------------------------------- |
+| Strict   | Cookies not sent                                      |
+| Lax      | Cookies sent (typically for top-level GET navigation) |
+| None     | Cookies sent                                          |
+
+---
+
+## Background Triggered Requests
+
+| SameSite | Cookie Behavior  |
+| -------- | ---------------- |
+| Strict   | Cookies not sent |
+| Lax      | Cookies not sent |
+| None     | Cookies sent     |
+
+---
+
+# Simplified SameSite View
+
+| SameSite | Silent Attack (`img/form`) | User Click       |
+| -------- | -------------------------- | ---------------- |
+| Strict   | Cookies not sent           | Cookies not sent |
+| Lax      | Cookies not sent           | Cookies sent     |
+| None     | Cookies sent               | Cookies sent     |
+
+---
+
+# CSRF - Cross Site Request Forgery
+
+## What is CSRF?
+
+Imagine a user has already authenticated into `bank.com`.
+
+The server sends session cookies, which are stored in the browser under the `bank.com` domain.
+
+Now the user visits another site, for example `evil.com`.
+
+If `evil.com` contains a malicious element like an `<img>` or `<a>` tag that triggers a request to `bank.com` (for example, a money transfer), this is considered a CSRF attack.
+
+---
+
+# Why is CSRF Possible?
+
+Even though the request originated from `evil.com`, the browser automatically attaches cookies belonging to `bank.com` when making the request.
+
+The backend server sees valid session cookies and assumes the request is legitimate.
+
+## Key Insight
+
+> Cookies prove identity, but not user intent.
+
+---
+
+# CSRF Protection Mechanisms
+
+CSRF protection can be implemented in multiple ways.
+
+---
+
+# 1. CSRF Tokens (Primary Defense)
+
+The application generates a unique CSRF token and includes it in the page (HTML, JavaScript, or meta tags).
+
+When a legitimate request is made, the browser sends:
+
+* Session cookie (automatically)
+* CSRF token (explicitly included by the application)
+
+The server validates both.
+
+If the token is missing or invalid:
+
+* The request is rejected.
+
+---
+
+# Why the Attacker Fails
+
+An attacker on `evil.com`:
+
+* Can trigger a request
+* Cannot read `bank.com` content
+* Cannot access the CSRF token
+
+Therefore:
+
+* The attacker cannot send a valid token
+* The request is rejected
+
+---
+
+# 2. SameSite Cookies
+
+The `SameSite` attribute controls when cookies are sent in cross-site requests.
+
+| SameSite | Behavior                                                                |
+| -------- | ----------------------------------------------------------------------- |
+| Strict   | Cookies never sent cross-site                                           |
+| Lax      | Cookies sent only on user-initiated navigation (typically GET requests) |
+| None     | Cookies sent in all requests                                            |
+
+`SameSite=Lax` helps reduce CSRF risk by blocking cookies during silent/background requests.
+
+---
+
+# 3. Origin / Referer Validation
+
+The server (or F5XC platform) checks:
+
+* Origin header
+* Referer header
+* Destination/target host
+
+If the source origin/referrer and target host match (or belong to the allowed list):
+
+* Request is allowed
+
+If they do not match:
+
+* Request is rejected
+
+---
+
+# F5XC CSRF Protection Note
+
+CSRF protection on F5XC is optimized for properly designed applications where state-changing operations use:
+
+* `POST`
+* `PUT`
+* `DELETE`
+
+F5XC primarily protects actions, not page views.
+
+Applications should avoid using `GET` requests for sensitive state-changing operations.
