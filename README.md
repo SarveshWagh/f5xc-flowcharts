@@ -4,6 +4,14 @@
 Please refer to the official F5XC technical documentation for the official details.  
 This README is intended for learning and understanding purposes only, these are juist guidelines.
 
+Devcentral and F5XC techdocs:
+
+https://community.f5.com/kb/technicalarticles/cookie-tampering-protection-using-f5-distributed-cloud-platform/327861
+
+https://my.f5.com/manage/s/article/K000148047
+
+https://community.f5.com/kb/technicalarticles/how-to-protect-your-applications-from-cross-site-request-forgery-csrf-with-f5-di/309117
+
 ## CSRF Protection
 
 ### Step 1: Application Type Assessment
