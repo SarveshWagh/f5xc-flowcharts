@@ -1,8 +1,8 @@
 # F5XC Security Feature Enablement Guidelines
 ## ⚠️ Important Note
 
-Please refer to the official F5XC technical documentation for the official details.  
-This README is intended for learning and understanding purposes only, these are juist guidelines.
+Please refer to the F5XC technical documentation for the official details.  
+This README is intended for learning and understanding purposes only, these are just guidelines.
 
 Devcentral and F5XC techdocs:
 
