@@ -2,7 +2,7 @@
 ## ⚠️ Important Note
 
 Please refer to the official F5XC technical documentation for the latest and updated details.  
-This README is intended for learning and understanding purposes only.
+This README is intended for learning and understanding purposes only, these are juist guidelines to get started with and in no way best practices.
 
 ## CSRF Protection
 
